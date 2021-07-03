@@ -1,5 +1,5 @@
 # Onion (Tor) Files Downloader
-Small console app to execute batch download of files from provided onion links using a Tor connection.
+Small console app to execute batch download of files from provided onion links using a Tor connection, using SocksWebProxy Nuget Package from Landon Key (Visit: https://github.com/postworthy/SocksWebProxy/).
 
 | Parameter | Value |
 | ------------- | ------------- |
