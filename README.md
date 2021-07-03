@@ -1,4 +1,4 @@
-# TorFileDownload
+# Onion Filees Downloader
 Small console app to execute batch download of files from provided onion links using a Tor connection.
 
 | Parameter | Value |
