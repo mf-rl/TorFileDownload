@@ -24,14 +24,14 @@ namespace TorFileDownload
                 )
             );
         }
+        static void writeLines(List<string> messageList)
+        {
+            messageList.ForEach(message => { Console.WriteLine(message); });
+        }
         public static void Execute()
         {
             string destination = ConfigurationManager.AppSettings[Constants.DESTINATION_PATH];
             string base_uri = ConfigurationManager.AppSettings[Constants.BASE_URI];
-            void writeLines(List<string> messageList)
-            {
-                messageList.ForEach(message => { Console.WriteLine(message); });
-            }
             Functional.ExecuteAction(
                 () =>
                 {
@@ -113,6 +113,7 @@ namespace TorFileDownload
                 string directory_dest = first_uri.Replace(base_uri, "").Replace(Path.GetFileName(first_uri), "").Replace("/", "_");
                 directory_dest = Path.Combine(destination, directory_dest);
                 if (!Directory.Exists(directory_dest)) Directory.CreateDirectory(directory_dest);
+                var proxyOptions = new ProxyConfig(IPAddress.Loopback, 8181, IPAddress.Loopback, 9150, ProxyConfig.SocksVersion.Five);
                 uri_d.ToList().ForEach(p =>
                 {
                     if (tries < 3)
@@ -122,28 +123,51 @@ namespace TorFileDownload
                         string uri_file_name = Path.GetFileName(p);
                         string fileName = string.Concat(Path.GetFileName(file_index.ToString().PadLeft(3, '0')), Path.GetExtension(uri_file_name).ToLower());
                         string destinationT = Path.Combine(directory_dest, fileName);
-                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(p);
-                        request.Proxy = new SocksWebProxy(new ProxyConfig(IPAddress.Loopback, 8181, IPAddress.Loopback, 9150, ProxyConfig.SocksVersion.Five));
-                        request.KeepAlive = false;
-                        try
+
+                        int singleTry = 0;
+                        bool downloadSuccess = false;
+
+
+                        while (!downloadSuccess && singleTry <= 5)
                         {
-                            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                            try
                             {
-                                using (Stream responseStream = response.GetResponseStream())
+                                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(p);
+                                request.Proxy = new SocksWebProxy(proxyOptions);
+                                request.KeepAlive = false;
+                                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
                                 {
-                                    Image.FromStream(responseStream).Save(destinationT);
+                                    using (Stream responseStream = response.GetResponseStream())
+                                    {
+                                        responseStream.Flush();
+                                        Image.FromStream(responseStream).Save(destinationT);
+                                    }
+                                    Console.WriteLine("Saved file: " + destinationT);
                                 }
-                                Console.WriteLine("Saved file: " + destinationT);
+                                downloadSuccess = true;
+                                tries = 0;
+                            }
+                            catch(Exception ex)
+                            {
+                                if (singleTry == 0) tries++;
+                                singleTry++;
+                                writeLines(new List<string>()
+                                {
+                                    "Errors found trying to download file:",
+                                    ex.Message,
+                                    "Trying to again..."
+                                });
                             }
                         }
-                        catch
+                        if (singleTry > 5)
                         {
                             tries++;
-                            if (tries >= 3)
-                            {
-                                Console.WriteLine("Process ended due to maximum failed requests.");
-                                return;
-                            }
+                            Console.WriteLine("Couldn't download file after 5 tries.");
+                        }
+                        if (tries >= 3)
+                        {
+                            Console.WriteLine("Process ended due to maximum failed requests.");
+                            return;
                         }
                     }
                 });
