@@ -9,7 +9,7 @@ namespace TorFileDownload
         static void Main()
         {
             Process.GetProcessesByName(Constants.TOR_PROCESS_NAME).ToList().ForEach(p => p.Kill());
-            new MainProcess().Execute();
+            MainProcess.Execute();
             Console.ReadKey();
         }
     }

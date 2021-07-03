@@ -13,9 +13,9 @@ using com.LandonKey.SocksWebProxy.Proxy;
 
 namespace TorFileDownload
 {
-    public class MainProcess
+    public static class MainProcess
     {
-        string GetInput(string messageTitle, string inputRequired, string currentValue)
+        static string GetInput(string messageTitle, string inputRequired, string currentValue)
         {
             Console.WriteLine(messageTitle);
             return (
@@ -24,7 +24,7 @@ namespace TorFileDownload
                 )
             );
         }
-        public void Execute()
+        public static void Execute()
         {
             string destination = ConfigurationManager.AppSettings[Constants.DESTINATION_PATH];
             string base_uri = ConfigurationManager.AppSettings[Constants.BASE_URI];
@@ -72,7 +72,7 @@ namespace TorFileDownload
                 ));
                 });
         }
-        private string OpenTorConnection(Action executeAction)
+        private static string OpenTorConnection(Action executeAction)
         {
             Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             server.Connect(new IPEndPoint(IPAddress.Parse(Constants.DEFAULT_HOST), 9151));
@@ -93,7 +93,7 @@ namespace TorFileDownload
             server.Close();
             return Message.PROCESS_ENDED_SUCCESSFULLY;
         }
-        private void ExecuteDownload(string base_uri, string destination)
+        private static void ExecuteDownload(string base_uri, string destination)
         {
             int file_index = 0;
             string reset = Constants.RETRY_INPUT;
@@ -151,7 +151,7 @@ namespace TorFileDownload
                 retry = GetInput(Message.RESET_CONDITION, Constants.NO, reset);
             } while (retry.Equals(Constants.RETRY_INPUT));
         }
-        private void StartProcess(Action executeAction)
+        private static void StartProcess(Action executeAction)
         {
             using (Process process = new Process
             {
