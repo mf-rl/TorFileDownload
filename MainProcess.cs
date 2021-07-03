@@ -28,7 +28,6 @@ namespace TorFileDownload
         {
             string destination = ConfigurationManager.AppSettings[Constants.DESTINATION_PATH];
             string base_uri = ConfigurationManager.AppSettings[Constants.BASE_URI];
-            MainProcess proc = new MainProcess();
             void writeLines(List<string> messageList)
             {
                 messageList.ForEach(message => { Console.WriteLine(message); });
@@ -62,18 +61,18 @@ namespace TorFileDownload
                         });
                 }
                 );
-            proc.StartProcess(
+            StartProcess(
                 () =>
                 {
-                    Console.WriteLine(proc.OpenTorConnection(
+                    Console.WriteLine(OpenTorConnection(
                     () =>
                     {
-                        proc.ExecuteDownload(base_uri, destination);
+                        ExecuteDownload(base_uri, destination);
                     }
                 ));
                 });
         }
-        public string OpenTorConnection(Action executeAction)
+        private string OpenTorConnection(Action executeAction)
         {
             Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             server.Connect(new IPEndPoint(IPAddress.Parse(Constants.DEFAULT_HOST), 9151));
@@ -94,7 +93,7 @@ namespace TorFileDownload
             server.Close();
             return Message.PROCESS_ENDED_SUCCESSFULLY;
         }
-        public void ExecuteDownload(string base_uri, string destination)
+        private void ExecuteDownload(string base_uri, string destination)
         {
             int file_index = 0;
             string reset = Constants.RETRY_INPUT;
@@ -152,7 +151,7 @@ namespace TorFileDownload
                 retry = GetInput(Message.RESET_CONDITION, Constants.NO, reset);
             } while (retry.Equals(Constants.RETRY_INPUT));
         }
-        public void StartProcess(Action executeAction)
+        private void StartProcess(Action executeAction)
         {
             using (Process process = new Process
             {
