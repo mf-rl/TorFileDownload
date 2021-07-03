@@ -24,7 +24,7 @@ namespace TorFileDownload
                 )
             );
         }
-        public void Authenticate()
+        public void Execute()
         {
             string destination = ConfigurationManager.AppSettings[Constants.DESTINATION_PATH];
             string base_uri = ConfigurationManager.AppSettings[Constants.BASE_URI];
