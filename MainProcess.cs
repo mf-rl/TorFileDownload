@@ -84,20 +84,31 @@ namespace TorFileDownload
             {
                 server.Shutdown(SocketShutdown.Both);
                 server.Close();
+                Console.Title = "Error :(";
                 return Message.UNABLE_SIGNAL_USER_TO_SERVER;
             }
             else
+            {                
                 Console.WriteLine(Message.SIGNAL_SUCCESS);
+                Console.Title = "Connected! :D";
+            }
             executeAction();
             server.Shutdown(SocketShutdown.Both);
             server.Close();
+
+            ToastNotify.ShowImageToast(
+                    System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
+                    "Batch download",
+                    Message.PROCESS_ENDED_SUCCESSFULLY,
+                    Path.GetFullPath(@"IMG\icon_notification.png"));
             return Message.PROCESS_ENDED_SUCCESSFULLY;
         }
         private static void ExecuteDownload(string base_uri, string destination)
         {
+            Console.Title = "Starting...";
             int file_index = 0;
             string reset = Constants.RETRY_INPUT;
-            string retry = Constants.RETRY_INPUT;
+            string retry = Constants.RETRY_INPUT;            
             do
             {
                 file_index = reset.Equals(Constants.RETRY_INPUT) ? 0 : file_index;
@@ -114,8 +125,10 @@ namespace TorFileDownload
                 directory_dest = Path.Combine(destination, directory_dest);
                 if (!Directory.Exists(directory_dest)) Directory.CreateDirectory(directory_dest);
                 var proxyOptions = new ProxyConfig(IPAddress.Loopback, 8181, IPAddress.Loopback, 9150, ProxyConfig.SocksVersion.Five);
+                var counter = 0;
                 uri_d.ToList().ForEach(p =>
                 {
+                    counter++;
                     if (tries < 3)
                     {
                         Console.WriteLine("Requesting page: " + p);
@@ -167,9 +180,16 @@ namespace TorFileDownload
                         if (tries >= 3)
                         {
                             Console.WriteLine("Process ended due to maximum failed requests.");
+
+                            ToastNotify.ShowImageToast(
+                                    System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
+                                    "Batch download",
+                                    "Process ended due to maximum failed requests.",
+                                    Path.GetFullPath(@"IMG\icon_notification.png"));
                             return;
                         }
                     }
+                    MostrarPorcentajeAvance(counter, uri_d.Count(), string.Empty);
                 });
                 retry = GetInput(Message.CANCEL_CONDITION, Constants.NO, retry);
                 retry = GetInput(Message.RESET_CONDITION, Constants.NO, reset);
@@ -194,6 +214,11 @@ namespace TorFileDownload
                 executeAction();
                 process.Kill();
             }
+        }
+        private static void MostrarPorcentajeAvance(decimal index, decimal total, string etiqueta)
+        {
+            decimal avance = index * 100 / total;
+            Console.Title = string.Format("Working: {0}% - {1}", decimal.Round(avance, 2).ToString(), etiqueta);
         }
     }
 }
